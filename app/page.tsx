@@ -1,17 +1,9 @@
-import { redis } from "@/lib/db";
-
-
 import React from 'react'
 
-const page = async () => {
-  //set
-   redis.set("foo", "key")
-   //read
-   const data = await redis.get("foo")
-   console.log(data)
+const Home = () => {
   return (
-    <div>page</div>
+    <div>Home</div>
   )
 }
 
-export default page
+export default Home

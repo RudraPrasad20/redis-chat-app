@@ -16,6 +16,13 @@ import { LoaderIcon } from 'react-hot-toast'
 import FriendRequestSidebarOptions from './friendRequestSidebarOptions'
 import SidebarChatList from './sidebarChat'
 
+interface SidebarOption {
+  id: number
+  name: string
+  href: string
+  Icon: null
+}
+
 interface MobileChatLayoutProps {
   friends: User[]
   session: Session

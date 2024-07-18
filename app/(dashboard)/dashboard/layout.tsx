@@ -9,13 +9,24 @@ import { ReactNode } from 'react'
 
 import { fetchRedis } from '@/components/helpers/redis'
 import { getFriendsByUserId } from '@/components/helpers/get-friends'
-import { RocketIcon } from 'lucide-react'
+import { LayoutDashboard, RocketIcon } from 'lucide-react'
+import MobileChatLayout from '@/components/mobileChat'
+import SidebarChatList from '@/components/sidebarChat'
+import FriendRequestSidebarOptions from '@/components/friendRequestSidebarOptions'
+import SignOut from '@/components/signOut'
 // import SidebarChatList from '@/components/SidebarChatList'
 // import MobileChatLayout from '@/components/MobileChatLayout'
 
 
 interface LayoutProps {
   children: ReactNode
+}
+
+interface SidebarOption {
+  id: number
+  name: string
+  href: string
+  Icon: null
 }
 
 // Done after the video and optional: add page metadata
@@ -29,7 +40,7 @@ const sidebarOptions: SidebarOption[] = [
     id: 1,
     name: 'Add friend',
     href: '/dashboard/add',
-    Icon: 'UserPlus',
+   Icon: null
   },
 ]
 
@@ -82,14 +93,15 @@ const Layout = async ({ children }: LayoutProps) => {
 
               <ul role='list' className='-mx-2 mt-2 space-y-1'>
                 {sidebarOptions.map((option) => {
-                  const Icon = Icons[option.Icon]
+                  // const Icon = Icons[option.Icon]
                   return (
                     <li key={option.id}>
                       <Link
                         href={option.href}
                         className='text-gray-700 hover:text-indigo-600 hover:bg-gray-50 group flex gap-3 rounded-md p-2 text-sm leading-6 font-semibold'>
                         <span className='text-gray-400 border-gray-200 group-hover:border-indigo-600 group-hover:text-indigo-600 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white'>
-                          <Icon className='h-4 w-4' />
+                          {/* <Icon className='h-4 w-4' /> */}
+                          <LayoutDashboard/>
                         </span>
 
                         <span className='truncate'>{option.name}</span>
@@ -128,7 +140,7 @@ const Layout = async ({ children }: LayoutProps) => {
                 </div>
               </div>
 
-              <SignOutButton className='h-full aspect-square' />
+              <SignOut className='h-full aspect-square' />
             </li>
           </ul>
         </nav>

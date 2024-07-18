@@ -1,3 +1,4 @@
+"use client"
 import { getFriendsByUserId } from '@/components/helpers/get-friends'
 import { fetchRedis } from '@/components/helpers/redis'
 import { authOptions } from '@/lib/auth'
@@ -16,6 +17,7 @@ const page = async ({}) => {
   const friends = await getFriendsByUserId(session.user.id)
 
   const friendsWithLastMessage = await Promise.all(
+    
     friends.map(async (friend) => {
       const [lastMessageRaw] = (await fetchRedis(
         'zrange',
@@ -23,7 +25,9 @@ const page = async ({}) => {
         -1,
         -1
       )) as string[]
-
+      console.log('Redis URL:', process.env.UPSTASH_REDIS_REST_URL);
+      console.log('Redis Token:', process.env.UPSTASH_REDIS_REST_TOKEN);
+      
       const lastMessage = JSON.parse(lastMessageRaw) as Message
 
       return {

@@ -54,7 +54,7 @@ export function AddFriend() {
             <FormItem>
               <FormLabel> Add friend by E-Mail</FormLabel>
               <FormControl>
-                <Input placeholder="shadcn" {...field} />
+                <Input placeholder="newfriend@gmail.com" {...field} />
               </FormControl>
               <FormDescription>
       {showSuccessState ? (

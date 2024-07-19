@@ -5,6 +5,7 @@ import { pusherServer } from '@/lib/pusher'
 import { toPusherKey } from '@/lib/utils'
 
 import { getServerSession } from 'next-auth'
+import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
 export const addFriendValidator = z.object({
@@ -13,27 +14,26 @@ export const addFriendValidator = z.object({
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json()
+    const body = await req.json(); // Ensure req.json() parses JSON correctly
 
-    const { email: emailToAdd } = addFriendValidator.parse(body.email)
-
+    const { email: emailToAdd } = addFriendValidator.parse(body);
     const idToAdd = (await fetchRedis(
       'get',
       `user:email:${emailToAdd}`
     )) as string
 
     if (!idToAdd) {
-      return new Response('This person does not exist.', { status: 400 })
+      return new NextResponse('This person does not exist.', { status: 400 })
     }
 
     const session = await getServerSession(authOptions)
 
     if (!session) {
-      return new Response('Unauthorized', { status: 401 })
+      return new NextResponse('Unauthorized', { status: 401 })
     }
 
     if (idToAdd === session.user.id) {
-      return new Response('You cannot add yourself as a friend', {
+      return new NextResponse('You cannot add yourself as a friend', {
         status: 400,
       })
     }
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
     )) as 0 | 1
 
     if (isAlreadyAdded) {
-      return new Response('Already added this user', { status: 400 })
+      return new NextResponse('Already added this user', { status: 400 })
     }
 
     // check if user is already added
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
     )) as 0 | 1
 
     if (isAlreadyFriends) {
-      return new Response('Already friends with this user', { status: 400 })
+      return new NextResponse('Already friends with this user', { status: 400 })
     }
 
     // valid request, send friend request
@@ -73,12 +73,14 @@ export async function POST(req: Request) {
 
     await db.sadd(`user:${idToAdd}:incoming_friend_requests`, session.user.id)
 
-    return new Response('OK')
+    return new NextResponse('OK')
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return new Response('Invalid request payload', { status: 422 })
+      console.error('Zod validation errors:', error.errors);
+      return new Response('Invalid request payload', { status: 422 });
     }
 
-    return new Response('Invalid request', { status: 400 })
+    console.error('Error handling request:', error);
+    return new Response('Invalid request', { status: 400 });
   }
 }

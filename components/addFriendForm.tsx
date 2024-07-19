@@ -34,15 +34,19 @@ export function AddFriend() {
   })
 
   // 2. Define a submit handler.
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      axios.post('/api/friends/add')
-      console.log(values)
-      setShowSuccessState(true)
+      await axios.post('/api/friends/add', { email: values.email }, {
+        headers: {
+          'Content-Type': 'application/json'
+        }});
+      setShowSuccessState(true);
     } catch (error) {
-     return error
+      console.error('Error adding friend:', error);
+      // Handle error state or logging as needed
+    }
   }
-}
+  
 
   return (
     <Form {...form}>

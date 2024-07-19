@@ -1,41 +1,12 @@
 "use client"
-import { getFriendsByUserId } from '@/components/helpers/get-friends'
-import { fetchRedis } from '@/components/helpers/redis'
-import { authOptions } from '@/lib/auth'
-import { chatHrefConstructor } from '@/lib/utils'
-
 import { ChevronRight } from 'lucide-react'
-import { getServerSession } from 'next-auth'
 import Image from 'next/image'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import DashboardPage from '@/components/dashboardPage' // Import the server component
+import { chatHrefConstructor } from '@/lib/utils'
 
-const page = async ({}) => {
-  const session = await getServerSession(authOptions)
-  if (!session) notFound()
-
-  const friends = await getFriendsByUserId(session.user.id)
-
-  const friendsWithLastMessage = await Promise.all(
-    
-    friends.map(async (friend) => {
-      const [lastMessageRaw] = (await fetchRedis(
-        'zrange',
-        `chat:${chatHrefConstructor(session.user.id, friend.id)}:messages`,
-        -1,
-        -1
-      )) as string[]
-      console.log('Redis URL:', process.env.UPSTASH_REDIS_REST_URL);
-      console.log('Redis Token:', process.env.UPSTASH_REDIS_REST_TOKEN);
-      
-      const lastMessage = JSON.parse(lastMessageRaw) as Message
-
-      return {
-        ...friend,
-        lastMessage,
-      }
-    })
-  )
+const Page = async () => {
+  const { session, friendsWithLastMessage } = await DashboardPage()
 
   return (
     <div className='container py-12'>
@@ -73,11 +44,11 @@ const page = async ({}) => {
                 <h4 className='text-lg font-semibold'>{friend.name}</h4>
                 <p className='mt-1 max-w-md'>
                   <span className='text-zinc-400'>
-                    {friend.lastMessage.senderId === session.user.id
+                    {friend.lastMessage?.senderId === session.user.id
                       ? 'You: '
                       : ''}
                   </span>
-                  {friend.lastMessage.text}
+                  {friend.lastMessage?.text}
                 </p>
               </div>
             </Link>
@@ -88,4 +59,4 @@ const page = async ({}) => {
   )
 }
 
-export default page
+export default Page

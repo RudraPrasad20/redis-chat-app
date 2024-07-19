@@ -2,25 +2,23 @@ const upstashRedisRestUrl = process.env.UPSTASH_REDIS_REST_URL;
 const authToken = process.env.UPSTASH_REDIS_REST_TOKEN;
 
 if (!upstashRedisRestUrl || !authToken) {
-  throw new Error('Missing Redis configuration in environment variables.');
+  throw new Error("Missing Redis configuration in environment variables.");
 }
 
-type Command = 'zrange' | 'sismember' | 'get' | 'smembers';
+type Command = "zrange" | "sismember" | "get" | "smembers";
 
 export async function fetchRedis(
   command: Command,
   ...args: (string | number)[]
 ) {
-  const commandUrl = `${upstashRedisRestUrl}/${command}/${args.join('/')}`;
-  
-  console.log('Constructed URL:', commandUrl);
+  const commandUrl = `${upstashRedisRestUrl}/${command}/${args.join("/")}`;
 
   try {
     const response = await fetch(commandUrl, {
       headers: {
         Authorization: `Bearer ${authToken}`,
       },
-      cache: 'no-store',
+      cache: "no-store",
     });
 
     if (!response.ok) {
@@ -29,7 +27,6 @@ export async function fetchRedis(
     }
 
     const data = await response.json();
-    console.log(`Response data for ${command}:`, data);
     return data.result;
   } catch (error) {
     console.error(`Fetch Redis error:`, error);

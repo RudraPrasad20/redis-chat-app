@@ -1,88 +1,96 @@
-import { fetchRedis } from '@/components/helpers/redis'
-import { authOptions } from '@/lib/auth'
-import { db } from '@/lib/db'
-import { pusherServer } from '@/lib/pusher'
-import { toPusherKey } from '@/lib/utils'
+import { fetchRedis } from "@/components/helpers/redis";
+import { authOptions } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { pusherServer } from "@/lib/pusher";
+import { toPusherKey } from "@/lib/utils";
 
-import { nanoid } from 'nanoid'
-import { getServerSession } from 'next-auth'
+import { nanoid } from "nanoid";
+import { getServerSession } from "next-auth";
 
-import { z } from 'zod'
+import { z } from "zod";
 
-export const messageValidator = z.object({
+const messageValidator = z.object({
   id: z.string(),
   senderId: z.string(),
   text: z.string(),
   timestamp: z.number(),
-})
+});
 
-export const messageArrayValidator = z.array(messageValidator)
+const messageArrayValidator = z.array(messageValidator);
 
-export type Message = z.infer<typeof messageValidator>
+type Message = z.infer<typeof messageValidator>;
 
 export async function POST(req: Request) {
   try {
-    const { text, chatId }: { text: string; chatId: string } = await req.json()
-    const session = await getServerSession(authOptions)
+    const { text, chatId }: { text: string; chatId: string } = await req.json();
+    const session = await getServerSession(authOptions);
 
-    if (!session) return new Response('Unauthorized', { status: 401 })
+    if (!session) return new Response("Unauthorized", { status: 401 });
 
-    const [userId1, userId2] = chatId.split('--')
+    const [userId1, userId2] = chatId.split("--");
 
     if (session.user.id !== userId1 && session.user.id !== userId2) {
-      return new Response('Unauthorized', { status: 401 })
+      return new Response("Unauthorized", { status: 401 });
     }
 
-    const friendId = session.user.id === userId1 ? userId2 : userId1
+    const friendId = session.user.id === userId1 ? userId2 : userId1;
 
     const friendList = (await fetchRedis(
-      'smembers',
+      "smembers",
       `user:${session.user.id}:friends`
-    )) as string[]
-    const isFriend = friendList.includes(friendId)
+    )) as string[];
+    const isFriend = friendList.includes(friendId);
 
     if (!isFriend) {
-      return new Response('Unauthorized', { status: 401 })
+      return new Response("Unauthorized", { status: 401 });
     }
 
     const rawSender = (await fetchRedis(
-      'get',
+      "get",
       `user:${session.user.id}`
-    )) as string
-    const sender = JSON.parse(rawSender) as User
+    )) as string;
+    const sender = JSON.parse(rawSender) as User;
 
-    const timestamp = Date.now()
+    const timestamp = Date.now();
 
     const messageData: Message = {
       id: nanoid(),
       senderId: session.user.id,
       text,
       timestamp,
-    }
+    };
 
-    const message = messageValidator.parse(messageData)
+    const message = messageValidator.parse(messageData);
 
     // notify all connected chat room clients
-    await pusherServer.trigger(toPusherKey(`chat:${chatId}`), 'incoming-message', message)
+    await pusherServer.trigger(
+      toPusherKey(`chat:${chatId}`),
+      "incoming-message",
+      message
+    );
 
-    await pusherServer.trigger(toPusherKey(`user:${friendId}:chats`), 'new_message', {
-      ...message,
-      senderImg: sender.image,
-      senderName: sender.name
-    })
+    await pusherServer.trigger(
+      toPusherKey(`user:${friendId}:chats`),
+      "new_message",
+      {
+        ...message,
+        senderImg: sender.image,
+        senderName: sender.name,
+      }
+    );
 
     // all valid, send the message
     await db.zadd(`chat:${chatId}:messages`, {
       score: timestamp,
       member: JSON.stringify(message),
-    })
+    });
 
-    return new Response('OK')
+    return new Response("OK");
   } catch (error) {
     if (error instanceof Error) {
-      return new Response(error.message, { status: 500 })
+      return new Response(error.message, { status: 500 });
     }
 
-    return new Response('Internal Server Error', { status: 500 })
+    return new Response("Internal Server Error", { status: 500 });
   }
 }

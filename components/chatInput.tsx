@@ -33,8 +33,9 @@ const ChatInput: FC<ChatInputProps> = ({ chatPartner, chatId }) => {
 
   return (
     <div className='border-t border-gray-200 px-4 pt-4 mb-2 sm:mb-0'>
-      <div className='relative flex-1 overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-indigo-600'>
-        <textarea
+      <div className='relative p-1 flex-1 overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 '>
+         {/* send message by pressing enter key */}
+        <Textarea
           ref={textareaRef}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {

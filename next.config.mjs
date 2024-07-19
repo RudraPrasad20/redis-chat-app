@@ -4,7 +4,14 @@ const nextConfig = {
         appDir: true,
       },
       images: {
-        domains: ['lh3.googleusercontent.com']
+        remotePatterns: [
+          {
+            protocol: 'https',
+            hostname: 'lh3.googleusercontent.com',
+            port: '',
+            pathname: '**',
+          },
+        ],
       },
       env: {
         UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
